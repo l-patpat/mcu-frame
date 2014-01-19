@@ -1,18 +1,12 @@
-# Object files
-*.o
-*.ko
+# Keil
+demo/stm32/list/*
+demo/stm32/obj/*
+!demo/stm32/list/!gitkeep
+!demo/stm32/obj/!gitkeep
 
-# Libraries
-*.lib
-*.a
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
+*.uvgui.*
+*.bak
+*.plg
+*.dep
+JLinkLog.txt
+JLinkSettings.ini
