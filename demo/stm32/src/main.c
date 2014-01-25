@@ -1,7 +1,7 @@
 #include "public.h"
 #include "task.h"
 #include "uart.h"
-#include "operation.h"
+#include "debug.h"
 #include <stdlib.h>
 
 _TaskList HighTasks, LowTasks;
@@ -31,10 +31,10 @@ void led_task(void *dummy)
 	GPIOA->ODR ^= 1<<2;
 }
 
-void uart_task(u8 *buf)
+void uart_task(u32 *number)
 {
-	(*buf)++;
-	uart_buf(buf, 1);
+	task_del(&LowTasks, 0);
+	printlog("number:%d\n", (*number)++);
 }
 /**************************************************************
 Ö÷º¯Êý
@@ -44,13 +44,12 @@ int main(void)
 	gpio_rcc_init();
 	led_init();
 	uart_init(115200);
-	operation_init();
 	
 	task_buf_init();
 	task_init(&HighTasks);
 	task_init(&LowTasks);
 	task_add(&LowTasks, led_task, 0, TASK_SEC(0.5));
-	task_add(&LowTasks, uart_task, task_param_alloc(sizeof(u8)), TASK_SEC(1));
+	task_add(&LowTasks, uart_task, task_param_alloc(sizeof(u32)), TASK_SEC(5));
 	
 	SysTick_Config(72000 * 1000 / TASK_FREQ);
 	

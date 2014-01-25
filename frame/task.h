@@ -1,8 +1,8 @@
 #ifndef __TASK_H
 #define __TASK_H
 
-#define TASK_ONCE 0
 #define TASK_FREQ 256
+#define TASK_ONCE 0
 #define TASK_SEC(TICK) ((signed short)(TICK * TASK_FREQ + 0.5))
 #define TASK_CREATE_PARAM(TYPE)
 #define TASK_CLEAR_PARAM(NAME, TYPE)
@@ -19,6 +19,7 @@ typedef struct _TASK {
 
 typedef struct _TASKLIST {
 	_Task			*First;
+	_Task			*Current;
 	_Task			*Last;
 } _TaskList;
 
