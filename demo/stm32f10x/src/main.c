@@ -46,8 +46,8 @@ int main(void)
 	uart_init(115200);
 	
 	task_buf_init();
-	task_init(&HighTasks);
-	task_init(&LowTasks);
+	task_list_init(&HighTasks);
+	task_list_init(&LowTasks);
 	task_add(&LowTasks, led_task, 0, TASK_SEC(0.5));
 	task_add(&LowTasks, uart_task, task_param_alloc(sizeof(u32)), TASK_SEC(5));
 	

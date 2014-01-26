@@ -39,7 +39,7 @@ void task_buf_init(void)
 	((_Param*)ParamBuf)->Flag = PF_FREE;
 }
 
-void task_init(_TaskList *tasks)
+void task_list_init(_TaskList *tasks)
 {
 	tasks->First = 0;
 	tasks->Current = 0;
@@ -151,7 +151,8 @@ void task_del(_TaskList *tasks, void *hook)
 	{
 		if(cur->Hook == hook || !hook)
 		{
-			if(cur != tasks->Current)
+			tasks->Changed = 1;
+			if(cur != tasks->Current || !tasks->Processing)
 			{
 				task_param_free(cur->Param);
 				cur->Hook = 0;
@@ -201,29 +202,42 @@ void task_dispatch(_TaskList *tasks)
 
 void task_process(_TaskList *tasks)
 {
-	_Task *task;
-	
-	if(tasks->First)
+	if(!tasks->First)
+		return;
+		
+	do
 	{
-		task = tasks->Current;
-
-		if(task)
-		{
-			if(task->Hook && !task->Counter)
-			{
-				if(task->Interval >= 0) task->Hook(task->Param);
-				if(!task->Interval) task->Interval--;
-				task->Counter = task->Interval;
-			}
-			tasks->Current = task->Next;
-		}
+		if(tasks->Current)
+			tasks->Current = tasks->Current->Next;
 		else
-		{
 			tasks->Current = tasks->First;
+			
+		tasks->Processing = 1;
+		if(!tasks->Changed)
+		{
+			if(tasks->Current && tasks->Current->Interval >= 0)
+			{
+				tasks->Current = tasks->Current;
+
+				if(tasks->Current->Hook && !tasks->Current->Counter)
+				{
+					if(!tasks->Current->Interval)
+						tasks->Current->Interval--;
+						
+					tasks->Current->Hook(tasks->Current->Param);
+					tasks->Current->Counter = tasks->Current->Interval;
+					break;
+				}
+			}
+			else
+			{
+				tasks->Current = 0;
+				tasks->Changed = 0;
+				break;
+			}
 		}
-	}
-	else
-	{
-		tasks->Current = 0;
-	}
+		tasks->Processing = 0;
+	} while(tasks->Current);
+	
+	tasks->Processing = 0;
 }
