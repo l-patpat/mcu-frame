@@ -1,8 +1,8 @@
 # Keil
-demo/stm32/list/*
-demo/stm32/obj/*
-!demo/stm32/list/!gitkeep
-!demo/stm32/obj/!gitkeep
+demo/stm32f10x/list/*
+demo/stm32f10x/obj/*
+!demo/stm32f10x/list/!gitkeep
+!demo/stm32f10x/obj/!gitkeep
 
 *.uvgui.*
 *.bak
