@@ -1,8 +1,8 @@
 #ifndef __TASK_H
 #define __TASK_H
 
-#define TASK_ONCE 0
 #define TASK_FREQ 256
+#define TASK_ONCE 0
 #define TASK_SEC(TICK) ((signed short)(TICK * TASK_FREQ + 0.5))
 #define TASK_CREATE_PARAM(TYPE)
 #define TASK_CLEAR_PARAM(NAME, TYPE)
@@ -20,10 +20,13 @@ typedef struct _TASK {
 typedef struct _TASKLIST {
 	_Task			*First;
 	_Task			*Last;
+	_Task			*Current;
+	char			Processing;
+	char			Changed;
 } _TaskList;
 
 extern void task_buf_init(void);
-extern void task_init(_TaskList *tasks);
+extern void task_list_init(_TaskList *tasks);
 extern void *task_param_alloc(unsigned int size);
 extern void task_param_free(void *param);
 extern signed char task_add(_TaskList *tasks, void *hook, void *param, signed short interval);

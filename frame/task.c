@@ -17,8 +17,13 @@ enum _PARAM_FLAG {
 };
 
 typedef struct _PARAM {
+#if PARAM_BUF_ALIGN > 2
 	unsigned short	Size;
 	unsigned short	Flag;
+#else
+	unsigned char	Size;
+	unsigned char	Flag;
+#endif
 } _Param;
 
 static _Task TaskBuf[TASK_MAX_NUMS];
@@ -34,9 +39,10 @@ void task_buf_init(void)
 	((_Param*)ParamBuf)->Flag = PF_FREE;
 }
 
-void task_init(_TaskList *tasks)
+void task_list_init(_TaskList *tasks)
 {
 	tasks->First = 0;
+	tasks->Current = 0;
 	tasks->Last = 0;
 }
 
@@ -110,7 +116,6 @@ signed char task_add(_TaskList *tasks, void *hook, void *param, signed short int
 {
 	unsigned char *h = (unsigned char*)&TaskBuf[0].Hook;
 	unsigned char i;
-	_Task *task;
 	
 	for(i = 0; i < TASK_MAX_NUMS; i++, h += TASK_SIZE)
 	{
@@ -124,42 +129,57 @@ signed char task_add(_TaskList *tasks, void *hook, void *param, signed short int
 				tasks->First = &TaskBuf[i];
 				
 			tasks->Last = &TaskBuf[i];
-			task = &TaskBuf[i];
-			task->Hook = (_TaskHook)hook;
-			task->Param = param;
-			task->Interval = interval;
-			task->Counter = interval;
-			task->Next = 0;
-			return	1;
+			TaskBuf[i].Hook = (_TaskHook)hook;
+			TaskBuf[i].Param = param;
+			TaskBuf[i].Interval = interval;
+			TaskBuf[i].Counter = interval;
+			TaskBuf[i].Next = 0;
+			return 1;
 		}
 	}
-	return	0;
+	return 0;
 }
 
 void task_del(_TaskList *tasks, void *hook)
 {
-	_Task *task;
+	_Task *cur, *prev;
 
-	if(!tasks->First) return;
+	cur = tasks->First;
+	prev = cur;
 
-	task = tasks->First;
-
-	while(1)
+	while(cur)
 	{
-		if(task->Hook == hook || !hook)
+		if(cur->Hook == hook || !hook)
 		{
-			if(task->Counter)
+			tasks->Changed = 1;
+			if(cur != tasks->Current || !tasks->Processing)
 			{
-				task_param_free(task->Param);
-				task->Hook = 0;
+				task_param_free(cur->Param);
+				cur->Hook = 0;
+				
+				if(cur == tasks->First)
+				{
+					prev = cur->Next;
+					tasks->First = prev;
+					if(!prev) tasks->Last = 0;
+				}
+				else if(cur == tasks->Last)
+				{
+					prev->Next = 0;
+				}
 			}
 			else
-				task->Interval = -1;
+			{
+				cur->Interval = -1;
+				prev = cur;
+			}
+			if(hook) return;
 		}
-		if(!task->Next)
-			break;
-			
-		task = task->Next;
+		else
+		{
+			prev = cur;
+		}
+		cur = cur->Next;
 	}
 }
 
@@ -167,16 +187,14 @@ void task_dispatch(_TaskList *tasks)
 {
 	_Task *task;
 
-	if(!tasks->First) return;
-
 	task = tasks->First;
 
-	while(1)
+	while(task)
 	{
-		if(task->Counter)
+		if(task->Interval < 0)
+			task_del(tasks, task->Hook);
+		else if(task->Counter)
 			task->Counter--;
-		if(!task->Next)
-			break;
 			
 		task = task->Next;
 	}
@@ -184,28 +202,42 @@ void task_dispatch(_TaskList *tasks)
 
 void task_process(_TaskList *tasks)
 {
-	_Task *task;
-
-	if(!tasks->First) return;
-
-	task = tasks->First;
-
-	while(1)
+	if(!tasks->First)
+		return;
+		
+	do
 	{
-		if(task->Interval < 0)
-		{
-			task_param_free(task->Param);
-			task->Hook = 0;
-		}
-		else if(task->Hook && !task->Counter)
-		{
-			task->Hook(task->Param);
-			task->Counter = task->Interval;
-			//break;
-		}
-		if(!task->Next)
-			break;
+		if(tasks->Current)
+			tasks->Current = tasks->Current->Next;
+		else
+			tasks->Current = tasks->First;
 			
-		task = task->Next;
-	}
+		tasks->Processing = 1;
+		if(!tasks->Changed)
+		{
+			if(tasks->Current && tasks->Current->Interval >= 0)
+			{
+				tasks->Current = tasks->Current;
+
+				if(tasks->Current->Hook && !tasks->Current->Counter)
+				{
+					if(!tasks->Current->Interval)
+						tasks->Current->Interval--;
+						
+					tasks->Current->Hook(tasks->Current->Param);
+					tasks->Current->Counter = tasks->Current->Interval;
+					break;
+				}
+			}
+			else
+			{
+				tasks->Current = 0;
+				tasks->Changed = 0;
+				break;
+			}
+		}
+		tasks->Processing = 0;
+	} while(tasks->Current);
+	
+	tasks->Processing = 0;
 }

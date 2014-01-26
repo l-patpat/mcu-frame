@@ -1,10 +1,11 @@
 #include "uart.h"
 
-//#define USART_USE_DMA
+#define USART_USE_DMA
 
 #define UART_BYTE(BYTE) \
 do { \
-	while(!READ_BIT(USART1->SR, USART_SR_TXE)); \
+	while(READ_BIT(USART1->CR1, USART_CR1_UE|USART_CR1_TE) == (USART_CR1_UE|USART_CR1_TE) && \
+		!READ_BIT(USART1->SR, USART_SR_TXE)); \
 	WRITE_REG(USART1->DR, (u8)BYTE); \
 } while(0)
 
@@ -28,8 +29,13 @@ void uart_init(u32 band)
 	SET_BIT(GPIOA->CRH, GPIO_CRH_CNF9_1);
 	SET_BIT(GPIOA->CRH, GPIO_CRH_MODE9);
 	
-	SET_BIT(USART1->CR1, USART_CR1_UE|USART_CR1_TE);
 	WRITE_REG(USART1->BRR, OSC / band);
+	SET_BIT(USART1->CR1, USART_CR1_UE|USART_CR1_TE);
+}
+
+void uart_byte(u8 byte)
+{
+	UART_BYTE(byte);
 }
 
 void uart_buf(u8 *buf, u16 size)
