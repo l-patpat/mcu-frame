@@ -112,6 +112,18 @@ void task_param_free(void *param)
 	} while(ParamBuf + PARAM_BUF_SIZE - (unsigned char*)p >= sizeof(_Param) + PARAM_BUF_ALIGN);
 }
 
+signed char task_exists(_TaskList *tasks, void *hook)
+{
+	_Task *task;
+
+	for(task = tasks->First; task; task = task->Next)
+	{
+		if(task->Hook == hook)
+			return 1;
+	}
+	return 0;
+}
+
 signed char task_add(_TaskList *tasks, void *hook, void *param, signed short interval)
 {
 	unsigned char *h = (unsigned char*)&TaskBuf[0].Hook;
@@ -142,44 +154,40 @@ signed char task_add(_TaskList *tasks, void *hook, void *param, signed short int
 
 void task_del(_TaskList *tasks, void *hook)
 {
-	_Task *cur, *prev;
+	_Task *task, *prev;
 
-	cur = tasks->First;
-	prev = cur;
-
-	while(cur)
+	for(task = prev = tasks->First; task; task = task->Next)
 	{
-		if(cur->Hook == hook || !hook)
+		if(task->Hook == hook || !hook)
 		{
 			tasks->Changed = 1;
-			if(cur != tasks->Current || !tasks->Processing)
+			if(task != tasks->Current || !tasks->Processing)
 			{
-				task_param_free(cur->Param);
-				cur->Hook = 0;
+				task_param_free(task->Param);
+				task->Hook = 0;
 				
-				if(cur == tasks->First)
+				if(task == tasks->First)
 				{
-					prev = cur->Next;
+					prev = task->Next;
 					tasks->First = prev;
 					if(!prev) tasks->Last = 0;
 				}
-				else if(cur == tasks->Last)
+				else if(task == tasks->Last)
 				{
 					prev->Next = 0;
 				}
 			}
 			else
 			{
-				cur->Interval = -1;
-				prev = cur;
+				task->Interval = -1;
+				prev = task;
 			}
 			if(hook) return;
 		}
 		else
 		{
-			prev = cur;
+			prev = task;
 		}
-		cur = cur->Next;
 	}
 }
 
@@ -187,16 +195,12 @@ void task_dispatch(_TaskList *tasks)
 {
 	_Task *task;
 
-	task = tasks->First;
-
-	while(task)
+	for(task = tasks->First; task; task = task->Next)
 	{
 		if(task->Interval < 0)
 			task_del(tasks, task->Hook);
 		else if(task->Counter)
 			task->Counter--;
-			
-		task = task->Next;
 	}
 }
 
@@ -212,31 +216,26 @@ void task_process(_TaskList *tasks)
 		else
 			tasks->Current = tasks->First;
 			
-		tasks->Processing = 1;
-		if(!tasks->Changed)
+		if(tasks->Current && tasks->Current->Interval >= 0)
 		{
-			if(tasks->Current && tasks->Current->Interval >= 0)
-			{
-				tasks->Current = tasks->Current;
-
-				if(tasks->Current->Hook && !tasks->Current->Counter)
-				{
-					if(!tasks->Current->Interval)
-						tasks->Current->Interval--;
-						
-					tasks->Current->Hook(tasks->Current->Param);
-					tasks->Current->Counter = tasks->Current->Interval;
-					break;
-				}
-			}
-			else
+			tasks->Processing = 1;
+			if(tasks->Changed)
 			{
 				tasks->Current = 0;
 				tasks->Changed = 0;
 				break;
 			}
+			if(tasks->Current->Hook && !tasks->Current->Counter)
+			{
+				if(!tasks->Current->Interval)
+					tasks->Current->Interval--;
+					
+				tasks->Current->Hook(tasks->Current->Param);
+				tasks->Current->Counter = tasks->Current->Interval;
+				break;
+			}
+			tasks->Processing = 0;
 		}
-		tasks->Processing = 0;
 	} while(tasks->Current);
 	
 	tasks->Processing = 0;

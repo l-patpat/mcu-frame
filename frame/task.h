@@ -29,6 +29,7 @@ extern void task_buf_init(void);
 extern void task_list_init(_TaskList *tasks);
 extern void *task_param_alloc(unsigned int size);
 extern void task_param_free(void *param);
+extern signed char task_exists(_TaskList *tasks, void *hook);
 extern signed char task_add(_TaskList *tasks, void *hook, void *param, signed short interval);
 extern void task_del(_TaskList *tasks, void *hook);
 extern void task_dispatch(_TaskList *tasks);
