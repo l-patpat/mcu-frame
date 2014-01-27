@@ -44,6 +44,8 @@ void task_list_init(_TaskList *tasks)
 	tasks->First = 0;
 	tasks->Current = 0;
 	tasks->Last = 0;
+	tasks->Processing = 0;
+	tasks->Changed = 0;
 }
 
 void *task_param_alloc(unsigned int size)
