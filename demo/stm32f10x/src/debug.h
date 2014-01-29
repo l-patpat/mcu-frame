@@ -5,7 +5,7 @@
 #ifdef _DEBUG
 extern void printlog(const char *format, ...);
 #else
-#define printlog(...)
+#define printlog(...) do{}while(0)
 #endif
 
 #endif /* __DEBUG_H */

@@ -200,7 +200,7 @@ void task_dispatch(_TaskList *tasks)
 	for(task = tasks->First; task; task = task->Next)
 	{
 		if(task->Interval < 0)
-			task_del(tasks, task->Hook);
+			task_del(tasks, (void*)task->Hook);
 		else if(task->Counter)
 			task->Counter--;
 	}
