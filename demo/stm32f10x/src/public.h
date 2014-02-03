@@ -4,5 +4,6 @@
 #include "stm32f10x.h"
 
 #define OSC		(u32)72000000
+#define BIT(N)	(1<<(N))
 
 #endif /* __PUBLIC_H */

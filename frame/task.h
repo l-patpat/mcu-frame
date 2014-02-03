@@ -1,6 +1,10 @@
 #ifndef __TASK_H
 #define __TASK_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TASK_FREQ 256
 #define TASK_ONCE 0
 #define TASK_SEC(TICK) ((signed short)(TICK * TASK_FREQ + 0.5))
@@ -34,5 +38,9 @@ extern signed char task_add(_TaskList *tasks, void *hook, void *param, signed sh
 extern void task_del(_TaskList *tasks, void *hook);
 extern void task_dispatch(_TaskList *tasks);
 extern void task_process(_TaskList *tasks);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __TASK_H */

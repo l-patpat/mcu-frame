@@ -33,7 +33,9 @@ void task_buf_init(void)
 {
 	unsigned char *p = (unsigned char*)TaskBuf;
 	for(; p < (unsigned char*)TaskBuf + TASK_BUF_SIZE; p++)
+	{
 		*p = 0;
+	}
 
 	((_Param*)ParamBuf)->Size = PARAM_BUF_SIZE - sizeof(_Param);
 	((_Param*)ParamBuf)->Flag = PF_FREE;
@@ -83,7 +85,9 @@ void task_param_free(void *param)
 	_Param *p, *pp;
 
 	if(PARAM_INVALID(param))
+	{
 		return;
+	}
 
 	param = (unsigned char*)param - sizeof(_Param);
 	p = (_Param*)ParamBuf;
@@ -105,8 +109,9 @@ void task_param_free(void *param)
 		else if(pp == param)
 		{
 			if(p->Flag == PF_FREE)
+			{
 				pp->Size += p->Size + sizeof(_Param);
-
+			}
 			break;
 		}
 		pp = p;
@@ -121,7 +126,9 @@ signed char task_exists(_TaskList *tasks, void *hook)
 	for(task = tasks->First; task; task = task->Next)
 	{
 		if(task->Hook == hook)
+		{
 			return 1;
+		}
 	}
 	return 0;
 }
@@ -131,17 +138,23 @@ signed char task_add(_TaskList *tasks, void *hook, void *param, signed short int
 	unsigned char *h = (unsigned char*)&TaskBuf[0].Hook;
 	unsigned char i;
 	
-	for(i = 0; i < TASK_MAX_NUMS; i++, h += TASK_SIZE)
+	for(i = 0; i < TASK_MAX_NUMS; i++)
 	{
 		if(!*(_TaskHook*)h)
 		{
 			if(PARAM_INVALID(param))
+			{
 				param = 0;
+			}
+			
 			if(tasks->Last)
+			{
 				tasks->Last->Next = &TaskBuf[i];
+			}
 			else
+			{
 				tasks->First = &TaskBuf[i];
-				
+			}
 			tasks->Last = &TaskBuf[i];
 			TaskBuf[i].Hook = (_TaskHook)hook;
 			TaskBuf[i].Param = param;
@@ -150,6 +163,7 @@ signed char task_add(_TaskList *tasks, void *hook, void *param, signed short int
 			TaskBuf[i].Next = 0;
 			return 1;
 		}
+		h += TASK_SIZE;
 	}
 	return 0;
 }
@@ -163,6 +177,7 @@ void task_del(_TaskList *tasks, void *hook)
 		if(task->Hook == hook || !hook)
 		{
 			tasks->Changed = 1;
+			
 			if(task != tasks->Current || !tasks->Processing)
 			{
 				task_param_free(task->Param);
@@ -172,7 +187,10 @@ void task_del(_TaskList *tasks, void *hook)
 				{
 					prev = task->Next;
 					tasks->First = prev;
-					if(!prev) tasks->Last = 0;
+					if(!prev)
+					{
+						tasks->Last = 0;
+					}
 				}
 				else if(task == tasks->Last)
 				{
@@ -184,7 +202,11 @@ void task_del(_TaskList *tasks, void *hook)
 				task->Interval = -1;
 				prev = task;
 			}
-			if(hook) return;
+			
+			if(hook)
+			{
+				return;
+			}
 		}
 		else
 		{
@@ -200,33 +222,45 @@ void task_dispatch(_TaskList *tasks)
 	for(task = tasks->First; task; task = task->Next)
 	{
 		if(task->Interval < 0)
+		{
 			task_del(tasks, (void*)task->Hook);
+		}
 		else if(task->Counter)
+		{
 			task->Counter--;
+		}
 	}
 }
 
 void task_process(_TaskList *tasks)
 {
 	if(!tasks->First)
+	{
 		return;
+	}
 		
 	do
 	{
 		if(tasks->Current)
+		{
 			tasks->Current = tasks->Current->Next;
+		}
 		else
+		{
 			tasks->Current = tasks->First;
+		}
 			
 		if(tasks->Current && tasks->Current->Interval >= 0)
 		{
 			tasks->Processing = 1;
+			
 			if(tasks->Changed)
 			{
 				tasks->Current = 0;
 				tasks->Changed = 0;
 				break;
 			}
+			
 			if(tasks->Current->Hook && !tasks->Current->Counter)
 			{
 				if(!tasks->Current->Interval)

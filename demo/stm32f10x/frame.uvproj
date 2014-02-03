@@ -418,6 +418,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\debug.c</FilePath>
             </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\spi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -427,6 +432,16 @@
               <FileName>startup_stm32f10x_hd.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\startup\startup_stm32f10x_hd.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Driver</GroupName>
+          <Files>
+            <File>
+              <FileName>MX25LXX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\MX25LXX.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -798,7 +813,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD, _DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>.\CM3;..\..\frame</IncludePath>
+              <IncludePath>.\src;.\CM3;.\Driver;..\..\frame</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -859,6 +874,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\debug.c</FilePath>
             </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\spi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -868,6 +888,16 @@
               <FileName>startup_stm32f10x_hd.s</FileName>
               <FileType>2</FileType>
               <FilePath>.\startup\startup_stm32f10x_hd.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Driver</GroupName>
+          <Files>
+            <File>
+              <FileName>MX25LXX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\MX25LXX.c</FilePath>
             </File>
           </Files>
         </Group>

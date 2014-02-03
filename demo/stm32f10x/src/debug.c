@@ -10,10 +10,10 @@ static char LogBuf[64];
 void printlog(const char *format, ...)
 {
 	va_list arg_prt;
-	uart_dma_wait();
+	uart1_dma_wait();
 	va_start(arg_prt, format);
 	vsprintf(LogBuf, format, arg_prt);
 	va_end(arg_prt);
-	uart_text((u8*)LogBuf);
+	uart1_text((u8*)LogBuf);
 }
 #endif
