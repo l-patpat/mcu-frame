@@ -13,6 +13,7 @@ u8 spi_byte(SPI_TypeDef *spi, u8 byte)
 {
 	if(READ_BIT(spi->CR1, SPI_CR1_SPE | SPI_CR1_MSTR) == (SPI_CR1_SPE | SPI_CR1_MSTR))
 	{
+		READ_REG(spi->DR);
 		while(!READ_BIT(spi->SR, SPI_SR_TXE));
 		WRITE_REG(spi->DR, byte);
 		while(!READ_BIT(spi->SR, SPI_SR_RXNE));
@@ -47,6 +48,7 @@ void spi_buf_swap(SPI_TypeDef *spi, u8 *buf, u16 size)
 	
 	if(READ_BIT(spi->CR1, SPI_CR1_SPE | SPI_CR1_MSTR) == (SPI_CR1_SPE | SPI_CR1_MSTR))
 	{
+		READ_REG(spi->DR);
 		while(size--)
 		{
 			while(!READ_BIT(spi->SR, SPI_SR_TXE));

@@ -1,4 +1,4 @@
-#include "MX25LXX.h"
+#include "SerialFlash.h"
 #include "public.h"
 #include "spi.h"
 #include "debug.h"
@@ -19,11 +19,22 @@ enum ENUM_COMMAND {
 	CMD_WREN	= 0x06,
 	CMD_PP		= 0x02,
 	CMD_SE		= 0x20,
-	CMD_BE		= 0x52,
+	CMD_BE1		= 0x52,
+	CMD_BE2		= 0xD8,
 	CMD_CE		= 0x60
 };
 
-long MX25LXX_ReadID(void)
+enum ENUM_STATUS_REGISTER {
+	SR_WIP		= 0x01,
+	SR_WEL		= 0x02,
+	SR_BP0		= 0x04,
+	SR_BP1		= 0x08,
+	SR_BP2		= 0x10,
+	SR_BP3		= 0x20,
+	SR_SRWD		= 0x80
+};
+
+long SerialFlash_ReadID(void)
 {
 	unsigned char buf[4];
 	
@@ -35,18 +46,30 @@ long MX25LXX_ReadID(void)
 	return (long)buf[1]<<16 | (long)buf[2]<<8 | (long)buf[3];
 }
 
-unsigned char MX25LXX_ReadStatus(void)
+unsigned char SerialFlash_ReadStatus(void)
 {
 	unsigned char status;
 	
 	CS_CLR();
-	status = SPI_BYTE(CMD_RDSR);
+	SPI_BYTE(CMD_RDSR);
+	status = SPI_BYTE(0);
 	CS_SET();
 	
 	return status;
 }
 
-void MX25LXX_Read(long address, unsigned char *buf, unsigned short size, char fast)
+char SerialFlash_IsBusy(void)
+{
+	char status = SerialFlash_ReadStatus();
+	return status & SR_WIP;
+}
+
+char SerialFlash_IsWriteEnable(void)
+{
+	return SerialFlash_ReadStatus() & SR_WEL;
+}
+
+void SerialFlash_Read(long address, unsigned char *buf, unsigned short size, char fast)
 {
 	CS_CLR();
 	SPI_BYTE(fast ? CMD_FREAD : CMD_READ);
@@ -61,7 +84,7 @@ void MX25LXX_Read(long address, unsigned char *buf, unsigned short size, char fa
 	CS_SET();
 }
 
-void MX25LXX_StreamReadStart(long address, char fast)
+void SerialFlash_StreamReadStart(long address, char fast)
 {
 	CS_CLR();
 	SPI_BYTE(fast ? CMD_FREAD : CMD_READ);
@@ -74,24 +97,24 @@ void MX25LXX_StreamReadStart(long address, char fast)
 	}
 }
 
-unsigned char MX25LXX_StreamRead(void)
+unsigned char SerialFlash_StreamRead(void)
 {
 	return SPI_BYTE(0);
 }
 
-void MX25LXX_StreamReadStop(void)
+void SerialFlash_StreamReadStop(void)
 {
 	CS_SET();
 }
 
-void MX25LXX_WriteEnable(char enable)
+void SerialFlash_WriteEnable(char enable)
 {
 	CS_CLR();
 	SPI_BYTE(enable ? CMD_WREN : CMD_WRDI);
 	CS_SET();
 }
 
-void MX25LXX_PageProgram(long address, unsigned char *buf, unsigned short size)
+void SerialFlash_PageProgram(long address, unsigned char *buf, unsigned short size)
 {
 	CS_CLR();
 	SPI_BYTE(CMD_PP);
@@ -102,7 +125,7 @@ void MX25LXX_PageProgram(long address, unsigned char *buf, unsigned short size)
 	CS_SET();
 }
 
-void MX25LXX_SectorErase(long address)
+void SerialFlash_SectorErase(long address)
 {
 	CS_CLR();
 	SPI_BYTE(CMD_SE);
@@ -112,17 +135,27 @@ void MX25LXX_SectorErase(long address)
 	CS_SET();
 }
 
-void MX25LXX_BlockErase(long address)
+void SerialFlash_BlockErase1(long address)
 {
 	CS_CLR();
-	SPI_BYTE(CMD_BE);
+	SPI_BYTE(CMD_BE1);
 	SPI_BYTE((unsigned char)(address>>16));
 	SPI_BYTE((unsigned char)(address>>8));
 	SPI_BYTE((unsigned char)(address & 0xFF));
 	CS_SET();
 }
 
-void MX25LXX_ChipErase(void)
+void SerialFlash_BlockErase2(long address)
+{
+	CS_CLR();
+	SPI_BYTE(CMD_BE2);
+	SPI_BYTE((unsigned char)(address>>16));
+	SPI_BYTE((unsigned char)(address>>8));
+	SPI_BYTE((unsigned char)(address & 0xFF));
+	CS_SET();
+}
+
+void SerialFlash_ChipErase(void)
 {
 	CS_CLR();
 	SPI_BYTE(CMD_CE);

@@ -22,7 +22,7 @@ do { \
 		!READ_BIT(DMA1_Channel4->CCR, DMA_CCR1_CIRC)); \
 } while(0)
 #else
-#define uart1_dma_wait() do while(0)
+#define uart1_dma_wait() do{} while(0)
 #endif
 
 extern void uart1_dma_init(void);

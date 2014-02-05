@@ -29,7 +29,7 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile></SFDFile>
+          <SFDFile>$$Device:STM32F103ZE$SVD\STM32F103xx.svd</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
@@ -341,7 +341,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>0</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>0</OneElfS>
@@ -357,7 +357,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD</Define>
               <Undefine></Undefine>
-              <IncludePath>.\CM3;..\..\frame</IncludePath>
+              <IncludePath>.\src;.\CM3;.\Driver;..\..\frame</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -439,9 +439,9 @@
           <GroupName>Driver</GroupName>
           <Files>
             <File>
-              <FileName>MX25LXX.c</FileName>
+              <FileName>SerialFlash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\Driver\MX25LXX.c</FilePath>
+              <FilePath>.\Driver\SerialFlash.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -797,7 +797,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>0</OneElfS>
@@ -895,9 +895,9 @@
           <GroupName>Driver</GroupName>
           <Files>
             <File>
-              <FileName>MX25LXX.c</FileName>
+              <FileName>SerialFlash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\Driver\MX25LXX.c</FilePath>
+              <FilePath>.\Driver\SerialFlash.c</FilePath>
             </File>
           </Files>
         </Group>
