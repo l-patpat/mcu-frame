@@ -1,6 +1,11 @@
 #ifndef __SerialFlash_H
 #define __SerialFlash_H
 
+enum E_FLASH_DEVICE {
+	FLASH_DEVICE_1
+};
+
+extern void SerialFlash_Select(enum E_FLASH_DEVICE id);
 extern long SerialFlash_ReadID(void);
 extern unsigned char SerialFlash_ReadStatus(void);
 extern char SerialFlash_IsBusy(void);

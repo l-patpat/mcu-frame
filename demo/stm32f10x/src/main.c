@@ -7,7 +7,7 @@
 #include "SerialFlash.h"
 #include <stdlib.h>
 
-_TaskList HighTasks, LowTasks;
+s_TaskList HighTasks, LowTasks;
 
 void SysTick_Handler(void)
 {
@@ -113,6 +113,7 @@ int main(void)
 	task_add(&HighTasks, (void*)led_task, 0, TASK_SEC(0.5));
 	task_add(&HighTasks, (void*)uart_task, task_param_alloc(sizeof(u32)), TASK_SEC(0.5));
 	
+	SerialFlash_Select(FLASH_DEVICE_1);
 	if((SerialFlash_ReadID() & 0xFF0000) == 0xC20000) //MXIC flash manufacturer ID is 0xC2
 	{
 		printlog("Found MXIC flash, ID 0x%06X\n", SerialFlash_ReadID());

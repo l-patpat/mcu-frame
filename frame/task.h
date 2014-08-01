@@ -11,33 +11,33 @@ extern "C" {
 #define TASK_CREATE_PARAM(TYPE)
 #define TASK_CLEAR_PARAM(NAME, TYPE)
 
-typedef void (*_TaskHook)(void*);
+typedef void (*f_TaskHook)(void*);
 
-typedef struct _TASK {
-	_TaskHook		Hook;
+typedef struct S_TASK {
+	f_TaskHook		Hook;
 	void			*Param;
 	signed short	Interval;
 	signed short	Counter;
-	struct _TASK	*Next;
-} _Task;
+	struct S_TASK	*Next;
+} s_Task;
 
-typedef struct _TASKLIST {
-	_Task			*First;
-	_Task			*Last;
-	_Task			*Current;
+typedef struct S_TASKLIST {
+	s_Task			*First;
+	s_Task			*Last;
+	s_Task			*Current;
 	char			Processing;
 	char			Changed;
-} _TaskList;
+} s_TaskList;
 
 extern void task_buf_init(void);
-extern void task_list_init(_TaskList *tasks);
+extern void task_list_init(s_TaskList *tasks);
 extern void *task_param_alloc(unsigned int size);
 extern void task_param_free(void *param);
-extern signed char task_exists(_TaskList *tasks, void *hook);
-extern signed char task_add(_TaskList *tasks, void *hook, void *param, signed short interval);
-extern void task_del(_TaskList *tasks, void *hook);
-extern void task_dispatch(_TaskList *tasks);
-extern void task_process(_TaskList *tasks);
+extern signed char task_exists(s_TaskList *tasks, void *hook);
+extern signed char task_add(s_TaskList *tasks, void *hook, void *param, signed short interval);
+extern void task_del(s_TaskList *tasks, void *hook);
+extern void task_dispatch(s_TaskList *tasks);
+extern void task_process(s_TaskList *tasks);
 
 #ifdef __cplusplus
 }
