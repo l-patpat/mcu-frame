@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "STM32_Init.h"
 #include "SerialFlash.h"
+#include "simple_server.h"
 #include <stdlib.h>
 
 s_TaskList HighTasks, LowTasks;
@@ -127,6 +128,8 @@ int main(void)
 	}
 
 	SysTick_Config(OSC / TASK_FREQ);
+	
+	simple_server();
 	
 	while(1)
 	{

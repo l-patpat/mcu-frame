@@ -3774,7 +3774,7 @@
 #define __GPIO_USED               0x03
 #define __GPIOA_CRL               0xB4B44344
 #define __GPIOA_CRH               0x444448B4
-#define __GPIOB_CRL               0x44444443
+#define __GPIOB_CRL               0x44444433
 #define __GPIOB_CRH               0x44444444
 #define __GPIOC_CRL               0x00000000
 #define __GPIOC_CRH               0x00400000
