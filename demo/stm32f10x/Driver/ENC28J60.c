@@ -228,6 +228,8 @@ unsigned char enc28j60getrev(void)
 
 void enc28j60PacketSend(unsigned int len, unsigned char* packet)
 	{
+	//printlog("ENC28J60 ECON1:0x%02X, EIR:0x%02X\n", enc28j60Read(ECON1), enc28j60Read(EIR));
+	while(enc28j60Read(ECON1) & ECON1_TXRTS);
 	// Set the write pointer to start of transmit buffer area
 	enc28j60Write(EWRPTL, TXSTART_INIT&0xFF);
 	enc28j60Write(EWRPTH, TXSTART_INIT>>8);
@@ -241,7 +243,7 @@ void enc28j60PacketSend(unsigned int len, unsigned char* packet)
 
 	// copy the packet into the transmit buffer
 	enc28j60WriteBuffer(len, packet);
-
+	
 	// send the contents of the transmit buffer onto the network
 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
 

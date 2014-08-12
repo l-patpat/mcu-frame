@@ -183,13 +183,14 @@ int simple_server(void)
         	{
             continue;
         	}
+			
         // arp is broadcast if unknown but a host may also
         // verify the mac address by sending it to 
         // a unicast address.
         if(eth_type_is_arp_and_my_ip(buf,plen))
         	{
 			make_arp_answer_from_request(buf);
-			//USART_DMASendText(USART1,"make_arp_answer_from_request\n");
+			//printlog("ENC28J60 receive arp package\n");
             continue;
         	}
 
@@ -204,10 +205,11 @@ int simple_server(void)
         	{
             // a ping packet, let's send pong	
 			make_echo_reply_from_request(buf, plen);
-			//USART_DMASendText(USART1,"make_echo_reply_from_request\n");
+			//printlog("ENC28J60 receive ping package\n");
 			continue;
         	}
-               // tcp port www start, compare only the lower byte
+			
+			
 		if (buf[IP_PROTO_P]==IP_PROTO_TCP_V&&buf[TCP_DST_PORT_H_P]==0&&buf[TCP_DST_PORT_L_P]==mywwwport)
 			{
             if (buf[TCP_FLAGS_P] & TCP_FLAGS_SYN_V)
