@@ -6,7 +6,7 @@
 static unsigned char Enc28j60Bank;
 static unsigned int NextPacketPtr;
 
-#define SPI_BYTE(BYTE) spi_byte(SPI1, BYTE)
+#define SPI_BYTE(BYTE) spi_byte(SPI2, BYTE)
 
 
 unsigned char enc28j60ReadOp(unsigned char op, unsigned char address)

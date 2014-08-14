@@ -467,6 +467,11 @@
               <FileType>1</FileType>
               <FilePath>.\Driver\ENC28J60.c</FilePath>
             </File>
+            <File>
+              <FileName>NRF24L01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\NRF24L01.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -946,6 +951,11 @@
               <FileName>ENC28J60.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Driver\ENC28J60.c</FilePath>
+            </File>
+            <File>
+              <FileName>NRF24L01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\NRF24L01.c</FilePath>
             </File>
           </Files>
         </Group>

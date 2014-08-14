@@ -3771,15 +3771,15 @@
 //   </e1.4>
 // </e> End of General purpose I/O Configuration
 #define __GPIO_SETUP              1
-#define __GPIO_USED               0x03
-#define __GPIOA_CRL               0xB4B44344
+#define __GPIO_USED               0x0F
+#define __GPIOA_CRL               0xB4B34344
 #define __GPIOA_CRH               0x444448B4
 #define __GPIOB_CRL               0x44444433
-#define __GPIOB_CRH               0x44444444
-#define __GPIOC_CRL               0x00000000
-#define __GPIOC_CRH               0x00400000
-#define __GPIOD_CRL               0x03300000
-#define __GPIOD_CRH               0x00000030
+#define __GPIOB_CRH               0xB4B44444
+#define __GPIOC_CRL               0x44834444
+#define __GPIOC_CRH               0x44444444
+#define __GPIOD_CRL               0x44444444
+#define __GPIOD_CRH               0x44444443
 #define __GPIOE_CRL               0x00000000
 #define __GPIOE_CRH               0x00000000
 

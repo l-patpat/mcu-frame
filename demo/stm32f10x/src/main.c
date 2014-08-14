@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "STM32_Init.h"
 #include "SerialFlash.h"
+#include "NRF24L01.h"
 #include "simple_server.h"
 #include <stdlib.h>
 
@@ -46,7 +47,7 @@ void flash_task(u8 *step)
 				printlog("flash_task step0: Sector erase at address 0x000000\n");
 				SerialFlash_WriteEnable(1);
 				SerialFlash_SectorErase(0x000000);
-				(*step) = 1;
+				*step = 1;
 			}
 			else
 			{
@@ -63,7 +64,7 @@ void flash_task(u8 *step)
 				}
 				SerialFlash_WriteEnable(1);
 				SerialFlash_PageProgram(0x000000, buf, sizeof(buf));
-				(*step) = 2;
+				*step = 2;
 			}
 			else
 			{
@@ -94,6 +95,27 @@ void flash_task(u8 *step)
 			break;
 	}
 }
+
+void rf_task(u8 *step)
+{
+	unsigned char buf[33];
+	
+	switch(*step)
+	{
+		case 0:
+			RX_Mode();
+			printlog("NRF24L01 in RX mode");
+			*step = 1;
+			break;
+		case 1:
+			if(NRF24L01_RxPacket(buf))
+			{
+				buf[32]=0;
+				printlog("%s", buf);
+			}
+			break;
+	}		
+}
 /**************************************************************
 Ö÷º¯Êý
 **************************************************************/
@@ -103,7 +125,9 @@ int main(void)
 	
 	STM32_Init();
 	uart1_dma_init();
-	spi1_init();
+	spi1_init(SPI_CR1_BR_DIV_8);
+	spi2_init(SPI_CR1_BR_DIV_2);
+	NRF24L01_Init();
 	
 	printlog("\nFrame for STM32 start...\n");
 	
@@ -113,7 +137,19 @@ int main(void)
 	
 	task_add(&HighTasks, (void*)led_task, 0, TASK_SEC(0.5));
 	task_add(&HighTasks, (void*)uart_task, task_param_alloc(sizeof(u32)), TASK_SEC(0.5));
-	
+
+	if(NRF24L01_Check())
+	{
+		printlog("Found NRF24L01\n");
+		param = task_param_alloc(sizeof(u8));
+		*(u8*)param = 0;
+		task_add(&HighTasks, (void*)rf_task, param, 2);
+	}
+	else
+	{
+		printlog("Not found NRF24L01\n");
+	}
+
 	SerialFlash_Select(FLASH_DEVICE_1);
 	if((SerialFlash_ReadID() & 0xFF0000) == 0xC20000) //MXIC flash manufacturer ID is 0xC2
 	{

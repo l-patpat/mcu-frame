@@ -3,7 +3,8 @@
 
 #include "public.h"
 
-extern void spi1_init(void);
+extern void spi1_init(u16 rate);
+extern void spi2_init(u16 rate);
 extern u8 spi_byte(SPI_TypeDef *spi, u8 byte);
 extern void spi_buf_send(SPI_TypeDef *spi, u8 *buf, u16 size);
 extern void spi_buf_swap(SPI_TypeDef *spi, u8 *buf, u16 size);

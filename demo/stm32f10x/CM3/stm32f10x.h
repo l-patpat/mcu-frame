@@ -7471,6 +7471,14 @@ typedef struct
 #define  SPI_CR1_BR_0                        ((uint16_t)0x0008)            /*!< Bit 0 */
 #define  SPI_CR1_BR_1                        ((uint16_t)0x0010)            /*!< Bit 1 */
 #define  SPI_CR1_BR_2                        ((uint16_t)0x0020)            /*!< Bit 2 */
+#define  SPI_CR1_BR_DIV_2                    ((uint16_t)0x0000)            /*!< BR fPCLK / 2 */
+#define  SPI_CR1_BR_DIV_4                    ((uint16_t)0x0008)            /*!< BR fPCLK / 4 */
+#define  SPI_CR1_BR_DIV_8                    ((uint16_t)0x0010)            /*!< BR fPCLK / 8 */
+#define  SPI_CR1_BR_DIV_16                   ((uint16_t)0x0018)            /*!< BR fPCLK / 16 */
+#define  SPI_CR1_BR_DIV_32                   ((uint16_t)0x0020)            /*!< BR fPCLK / 32 */
+#define  SPI_CR1_BR_DIV_64                   ((uint16_t)0x0028)            /*!< BR fPCLK / 64 */
+#define  SPI_CR1_BR_DIV_128                  ((uint16_t)0x0030)            /*!< BR fPCLK / 128 */
+#define  SPI_CR1_BR_DIV_256                  ((uint16_t)0x0038)            /*!< BR fPCLK / 256 */
 
 #define  SPI_CR1_SPE                         ((uint16_t)0x0040)            /*!< SPI Enable */
 #define  SPI_CR1_LSBFIRST                    ((uint16_t)0x0080)            /*!< Frame Format */
@@ -8300,17 +8308,23 @@ typedef struct
   * @{
   */
 
-#define SET_BIT(REG, BIT)     ((REG) |= (BIT))
+#define SET_IO(GPIO, BIT)		do { WRITE_REG(GPIO->BSRR, BIT); } while(0)
 
-#define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
+#define CLEAR_IO(GPIO, BIT)		do { WRITE_REG(GPIO->BRR, BIT); } while(0)
 
-#define READ_BIT(REG, BIT)    ((REG) & (BIT))
+#define READ_IO(GPIO, BIT)		READ_BIT(GPIO->IDR, BIT)
 
-#define CLEAR_REG(REG)        ((REG) = (0x0))
+#define SET_BIT(REG, BIT)		((REG) |= (BIT))
 
-#define WRITE_REG(REG, VAL)   ((REG) = (VAL))
+#define CLEAR_BIT(REG, BIT)		((REG) &= ~(BIT))
 
-#define READ_REG(REG)         ((REG))
+#define READ_BIT(REG, BIT)		((REG) & (BIT))
+
+#define CLEAR_REG(REG)			((REG) = (0x0))
+
+#define WRITE_REG(REG, VAL)		((REG) = (VAL))
+
+#define READ_REG(REG)			((REG))
 
 #define MODIFY_REG(REG, CLEARMASK, SETMASK)  WRITE_REG((REG), (((READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
 

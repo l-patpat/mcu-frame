@@ -237,8 +237,8 @@
 #define        MAX_FRAMELEN        1500        // (note: maximum ethernet frame length would be 1518)
 //#define MAX_FRAMELEN     600
 
-#define 	ENC28J60_CSL()		do { WRITE_REG(GPIOB->BRR, BIT(1)); } while(0)
-#define 	ENC28J60_CSH()		do { WRITE_REG(GPIOB->BSRR, BIT(1)); } while(0)
+#define 	ENC28J60_CSH()		SET_IO(GPIOD, BIT(8))
+#define 	ENC28J60_CSL()		CLEAR_IO(GPIOD, BIT(8))
 
 //SPI1≥ı ºªØ
 //void	ENC28J60_Init(void);
