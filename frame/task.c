@@ -185,16 +185,20 @@ void task_del(s_TaskList *tasks, void *hook)
 				
 				if(task == tasks->First)
 				{
-					prev = task->Next;
-					tasks->First = prev;
-					if(!prev)
+					tasks->First = task->Next;
+					if(!tasks->First)
 					{
 						tasks->Last = 0;
 					}
 				}
 				else if(task == tasks->Last)
 				{
+					tasks->Last = prev;
 					prev->Next = 0;
+				}
+				else
+				{
+					prev->Next = task->Next;
 				}
 			}
 			else
