@@ -1,192 +1,262 @@
 #include "NRF24L01.h"
-#include "spi.h"
-#include "debug.h"
 
-#define SPI_BYTE(BYTE) spi_byte(SPI1, BYTE)
-#define SPI_BUF_SEND(BUF, SIZE) spi_buf_send(SPI1, BUF, SIZE)
-#define SPI_BUF_SWAP(BUF, SIZE) spi_buf_swap(SPI1, BUF, SIZE)
+enum E_COMMAND {
+	CMD_R_REGISTER			= 0x00,	//读寄存器
+	CMD_W_REGISTER			= 0x20,	//写寄存器
+	CMD_R_RX_PAYLOAD		= 0x61,	//从FIFO读接收到的数据
+	CMD_W_TX_PAYLOAD		= 0xA0,	//写负载数据
+	CMD_FLUSH_TX			= 0xE1,	//清空TX FIFO
+	CMD_FLUSH_RX			= 0xE2,	//清空RX FIFO
+	CMD_REUSE_TX_PL			= 0xE3,	//重新发送TX FIFO中的数据
+	CMD_R_RX_PL_WID			= 0x60,	//读取收到的数据字节数
+	CMD_W_ACK_PAYLOAD		= 0xA8,	//写ACK负载数据
+	CMD_W_TX_PAYLOAD_NOACK	= 0xB0,	//写负载数据（无应答）
+	CMD_NOP					= 0xFF	//空操作
+};
 
-const unsigned char TX_ADDRESS[TX_ADR_WIDTH]={0x34,0x43,0x10,0x10,0x01}; //发送地址
-const unsigned char RX_ADDRESS[RX_ADR_WIDTH]={0x34,0x43,0x10,0x10,0x01}; //发送地址
+enum E_REGISTER {
+	REG_CONFIG				= 0x00,
+	REG_EN_AA				= 0x01,
+	REG_EN_RXADDR			= 0x02,
+	REG_SETUP_AW			= 0x03,
+	REG_SETUP_RETR			= 0x04,
+	REG_RF_CH				= 0x05,
+	REG_RF_SETUP			= 0x06,
+	REG_STATUS				= 0x07,
+	REG_OBSERVE_TX			= 0x08,
+	REG_RSSI				= 0x09,
+	REG_RX_ADDR_P0			= 0x0A,
+	REG_RX_ADDR_P1			= 0x0B,
+	REG_RX_ADDR_P2			= 0x0C,
+	REG_RX_ADDR_P3			= 0x0D,
+	REG_RX_ADDR_P4			= 0x0E,
+	REG_RX_ADDR_P5			= 0x0F,
+	REG_TX_ADDR				= 0x10,
+	REG_RX_PW_P0			= 0x11,
+	REG_RX_PW_P1			= 0x12,
+	REG_RX_PW_P2			= 0x13,
+	REG_RX_PW_P3			= 0x14,
+	REG_RX_PW_P4			= 0x15,
+	REG_RX_PW_P5			= 0x16,
+	REG_FIFO_STATUS			= 0x17,
+	REG_DYNPD				= 0x1C,
+	REG_FEATURE				= 0x1D
+};
 
-//初始化24L01的IO口
+enum E_CONFIG {
+	CONFIG_MASK_RX_DR		= 0x40,
+	CONFIG_MASK_TX_DS		= 0x20,
+	CONFIG_MASK_MAX_RT		= 0x10,
+	CONFIG_EN_CRC			= 0x08,
+	CONFIG_CRCO				= 0x04,
+	CONFIG_PWR_UP			= 0x02,
+	CONFIG_PRIM_RX			= 0x01
+};
+
+enum E_STATUS {
+	STATUS_RX_DR			= 0x40,
+	STATUS_TX_DS			= 0x20,
+	STATUS_MAX_RT			= 0x10,
+	STATUS_TX_FULL			= 0x01
+};
+
+#include "NRF24L01_HAL.h"
+
+static INLINE void SendCMD(unsigned char cmd)
+{
+   	CSL();
+  	SPI_BYTE(cmd);
+  	CSH();
+}
+
+static INLINE unsigned char Read(unsigned char reg)
+{
+	unsigned char value;
+ 	CSL();
+  	SPI_BYTE(reg);
+  	value = SPI_BYTE(0xFF);
+  	CSH();
+  	return value;
+}
+
+static INLINE void Write(unsigned char reg, unsigned char value)
+{
+   	CSL();
+  	SPI_BYTE(reg);
+  	SPI_BYTE(value);
+  	CSH();
+}
+
+static void ReadBuf(unsigned char reg, unsigned char *buf, unsigned char len)
+{
+	if(!buf || !len)
+		return;
+	
+  	CSL();
+  	SPI_BYTE(reg);
+ 	while(len--)
+	{
+		*buf++ = SPI_BYTE(0xFF);
+	}
+  	CSH();
+}
+
+static void WriteBuf(unsigned char reg, unsigned char *buf, unsigned char len)
+{
+	if(!buf || !len)
+		return;
+	
+ 	CSL();
+  	SPI_BYTE(reg);
+ 	while(len--)
+	{
+		SPI_BYTE(*buf++);
+	}
+  	CSH();
+}
+
 void NRF24L01_Init(void)
 {
-	GPIO_InitTypeDef gpioInit;
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOC, ENABLE);
-	
-	GPIO_StructInit(&gpioInit);
-	gpioInit.GPIO_Speed = GPIO_Speed_50MHz;
-	
-	gpioInit.GPIO_Pin = GPIO_Pin_4;
-	gpioInit.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_Init(GPIOA, &gpioInit);
-	
-	gpioInit.GPIO_Pin = GPIO_Pin_4;
-	gpioInit.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_Init(GPIOC, &gpioInit);
-	
-	gpioInit.GPIO_Pin = GPIO_Pin_5;
-	gpioInit.GPIO_Mode = GPIO_Mode_IN;
-	gpioInit.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_Init(GPIOC, &gpioInit);
-
-	spi1_init(SPI_BaudRatePrescaler_8);
-	
-	NRF24L01_CEL();
-	NRF24L01_CSH();	  		 		  
+	NRF24L01_HAL_Init();
+	CEL();
+	CSH();
 }
-//检测24L01是否存在
+
 unsigned char NRF24L01_Check(void)
 {
-#define DUMMY_BYTE 0xA5
-	unsigned char buf[5]={DUMMY_BYTE,DUMMY_BYTE,DUMMY_BYTE,DUMMY_BYTE,DUMMY_BYTE};
+	unsigned char buf[5];
 	unsigned char i;
 	
-	NRF24L01_Write_Buf(CMD_WRITE_REG+TX_ADDR, buf, 5);
-	NRF24L01_Read_Buf(TX_ADDR, buf, 5);
-	printlog("NRF24L01 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
-		buf[0], buf[1], buf[2], buf[3], buf[4]);
-	
-	for(i=0; i<5; i++)
+	for(i = 0; i < 5; i++)
 	{
-		if(buf[i] != DUMMY_BYTE)
+		buf[i] = 0xA5;
+	}
+	
+	WriteBuf(CMD_W_REGISTER | REG_TX_ADDR, buf, 5);
+	ReadBuf(REG_TX_ADDR, buf, 5);
+	
+	for(i = 0; i < 5; i++)
+	{
+		if(buf[i] != 0xA5)
 			return 0;
 	}
 	return 1;
-}	 	 
-//SPI写寄存器
-//reg:指定寄存器地址
-//value:写入的值
-unsigned char NRF24L01_Write_Reg(unsigned char reg,unsigned char value)
-{
-	unsigned char status;	
-   	NRF24L01_CSL();                 //使能SPI传输
-  	status = SPI_BYTE(reg);//发送寄存器号 
-  	SPI_BYTE(value);      //写入寄存器的值
-  	NRF24L01_CSH();                 //禁止SPI传输	   
-  	return(status);       			//返回状态值
 }
-//读取SPI寄存器值
-//reg:要读的寄存器
-unsigned char NRF24L01_Read_Reg(unsigned char reg)
+
+void NRF24L01_SetTxAddress(unsigned char *address, unsigned char length)
 {
-	unsigned char reg_val;	    
- 	NRF24L01_CSL();          //使能SPI传输		
-  	SPI_BYTE(reg);   //发送寄存器号
-  	reg_val= SPI_BYTE(0XFF);//读取寄存器内容
-  	NRF24L01_CSH();          //禁止SPI传输		    
-  	return(reg_val);           //返回状态值
-}	
-//在指定位置读出指定长度的数据
-//reg:寄存器(位置)
-//*pBuf:数据指针
-//len:数据长度
-//返回值,此次读到的状态寄存器值 
-unsigned char NRF24L01_Read_Buf(unsigned char reg,unsigned char *pBuf,unsigned char len)
-{
-	unsigned char status, ctr;	       
-  	NRF24L01_CSL();           //使能SPI传输
-  	status = SPI_BYTE(reg);//发送寄存器值(位置),并读取状态值   	   
- 	for(ctr=0; ctr < len; ctr++)
-	{
-		pBuf[ctr] = SPI_BYTE(0XFF);//读出数据
-	}
-  	NRF24L01_CSH();       //关闭SPI传输
-  	return status;        //返回读到的状态值
+	if(length < 3 || length > 5)
+		return;
+	
+  	WriteBuf(CMD_W_REGISTER | REG_TX_ADDR, address, length);
 }
-//在指定位置写指定长度的数据
-//reg:寄存器(位置)
-//*pBuf:数据指针
-//len:数据长度
-//返回值,此次读到的状态寄存器值
-unsigned char NRF24L01_Write_Buf(unsigned char reg, unsigned char *pBuf, unsigned char len)
+
+void NRF24L01_SetRxAddress(unsigned char channel, unsigned char *address, unsigned char length)
 {
-	unsigned char status, ctr;	    
- 	NRF24L01_CSL();          //使能SPI传输
-  	status = SPI_BYTE(reg);//发送寄存器值(位置),并读取状态值
-  	for(ctr=0; ctr<len; ctr++)
-	{
-		SPI_BYTE(*pBuf++); //写入数据	
-	}
-  	NRF24L01_CSH();       //关闭SPI传输
-  	return status;          //返回读到的状态值
-}				   
-//启动NRF24L01发送一次数据
-//txbuf:待发送数据首地址
-//返回值:发送完成状况
-unsigned char NRF24L01_TxPacket(unsigned char *txbuf)
-{
-	unsigned char sta;
-	NRF24L01_CEL();
-  	NRF24L01_Write_Buf(CMD_WR_TX_PLOAD,txbuf,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
- 	NRF24L01_CEH();//启动发送	   
-	while(0 != NRF24L01_IRQ());//等待发送完成
-	sta=NRF24L01_Read_Reg(STATUS);  //读取状态寄存器的值	   
-	NRF24L01_Write_Reg(CMD_WRITE_REG+STATUS,sta); //清除TX_DS或MAX_RT中断标志
-	if(sta&MAX_TX)//达到最大重发次数
-	{
-		NRF24L01_Write_Reg(CMD_FLUSH_TX,0xff);//清除TX FIFO寄存器 
-		return MAX_TX; 
-	}
-	if(sta&TX_OK)//发送完成
-	{
-		return TX_OK;
-	}
-	return 0xff;//其他原因发送失败
+	if(channel > 5)
+		return;
+	if(length < 3 || length > 5)
+		return;
+	
+  	WriteBuf(CMD_W_REGISTER | (REG_RX_ADDR_P0 + channel), address, length);
 }
-//启动NRF24L01发送一次数据
-//txbuf:待发送数据首地址
-//返回值:0，接收完成；其他，错误代码
-unsigned char NRF24L01_RxPacket(unsigned char *rxbuf)
+
+void NRF24L01_Config(const unsigned char *buf)
 {
-	unsigned char sta;		    							   
-	sta=NRF24L01_Read_Reg(STATUS);  //读取状态寄存器的值    	 
-	NRF24L01_Write_Reg(CMD_WRITE_REG+STATUS, sta); //清除TX_DS或MAX_RT中断标志
-	if(sta & RX_OK)//接收到数据
+	unsigned char len = *buf++;
+
+	if(!buf)
+		return;
+	
+	CSL();
+	while(len--)
 	{
-		NRF24L01_Read_Buf(CMD_RD_RX_PLOAD, rxbuf, RX_PLOAD_WIDTH);//读取数据
-		NRF24L01_Write_Reg(CMD_FLUSH_RX, 0xFF);//清除RX FIFO寄存器 
-		return 1;
-	}	   
-	return 0;
-}					    
-//该函数初始化NRF24L01到RX模式
-//设置RX地址,写RX数据宽度,选择RF频道,波特率和LNA HCURR
-//当CE变高后,即进入RX模式,并可以接收数据了		   
-void RX_Mode(void)
+		SPI_BYTE(*buf++);
+		if(len == 0)
+		{
+			CSH();
+			len = *buf++;
+			CSL();
+		}
+	}
+	CSH();
+}
+
+void NRF24L01_ShutDown()
 {
-	NRF24L01_CEL();	  
-  	NRF24L01_Write_Buf(CMD_WRITE_REG+RX_ADDR_P0,(unsigned char*)RX_ADDRESS,RX_ADR_WIDTH);//写RX节点地址
-	  
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+EN_AA,0x01);    //使能通道0的自动应答    
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+EN_RXADDR,0x01);//使能通道0的接收地址  	 
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+RF_CH,40);	     //设置RF通信频率		  
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+RX_PW_P0,RX_PLOAD_WIDTH);//选择通道0的有效数据宽度 	    
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+RF_SETUP,0x0f);//设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+CONFIG, 0x0f);//配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式 
-  	NRF24L01_CEH(); //CE为高,进入接收模式 
-}						 
-//该函数初始化NRF24L01到TX模式
-//设置TX地址,写TX数据宽度,设置RX自动应答的地址,填充TX发送数据,选择RF频道,波特率和LNA HCURR
-//PWR_UP,CRC使能
-//当CE变高后,即进入RX模式,并可以接收数据了		   
-//CE为高大于10us,则启动发送.	 
-void TX_Mode(void)
-{														 
-	NRF24L01_CEL();	    
-  	NRF24L01_Write_Buf(CMD_WRITE_REG+TX_ADDR,(unsigned char*)TX_ADDRESS,TX_ADR_WIDTH);//写TX节点地址 
-  	NRF24L01_Write_Buf(CMD_WRITE_REG+RX_ADDR_P0,(unsigned char*)RX_ADDRESS,RX_ADR_WIDTH); //设置TX节点地址,主要为了使能ACK	  
+	unsigned char config;
+	
+	CEL();
+	config = Read(CMD_R_REGISTER | REG_CONFIG);
+	if(config & CONFIG_PWR_UP)
+	{
+		Write(CMD_W_REGISTER | REG_CONFIG, config & ~CONFIG_PWR_UP);
+	}
+}
 
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+EN_AA,0x01);     //使能通道0的自动应答    
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+EN_RXADDR,0x01); //使能通道0的接收地址  
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+RF_CH,40);       //设置RF通道为40
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
-  	NRF24L01_Write_Reg(CMD_WRITE_REG+CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式,开启所有中断
-	NRF24L01_CEH();//CE为高,10us后启动发送
-}		  
+void NRF24L01_RxMode(void)
+{
+	CEL();
+  	NRF24L01_Config(RxModeConfig);
+  	CEH();
+}
 
+void NRF24L01_TxMode(void)
+{
+	CEL();
+  	NRF24L01_Config(TxModeConfig);
+}
 
+void NRF24L01_RxPacket(unsigned char *buf)
+{
+	unsigned char status;
+	
+	status = Read(CMD_R_REGISTER | REG_STATUS);
+	if(status & STATUS_RX_DR)
+	{
+		Write(CMD_W_REGISTER | REG_STATUS, status & ~(STATUS_TX_DS | STATUS_MAX_RT));
+		ReadBuf(CMD_R_RX_PAYLOAD, buf, );
+	}
+}
 
+void NRF24L01_TxPacket(unsigned char *buf)
+{
+	CEL();
+  	WriteBuf(CMD_W_TX_PAYLOAD, buf, TX_PAYLOAD_WIDTH);
+ 	CEH();
+}
 
+void NRF24L01_TxPacketNoACK(unsigned char *buf, unsigned char len)
+{
+	CEL();
+  	WriteBuf(CMD_W_TX_PAYLOAD_NOACK, buf, len);
+ 	CEH();
+}
+
+unsigned char NRF24L01_TxOK()
+{
+	unsigned char status;
+	
+	status = Read(CMD_R_REGISTER | REG_STATUS);
+	
+	if(!(status & STATUS_TX_DS))
+		return 0;
+	if(status & STATUS_MAX_RT)
+		return 0;
+	
+	return 1;
+}
+
+unsigned char NRF24L01_RxOK()
+{
+	unsigned char status;
+	
+	status = Read(CMD_R_REGISTER | REG_STATUS);
+	
+	if(!(status & STATUS_TX_DS))
+		return 0;
+	if(status & STATUS_MAX_RT)
+		return 0;
+	
+	return 1;
+}

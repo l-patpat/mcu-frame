@@ -57,7 +57,7 @@ void rf_task(u8 *step)
 	switch(*step)
 	{
 		case 0:
-			TX_Mode();
+			NRF24L01_TxMode();
 			printlog("NRF24L01 in TX mode");
 			*step = 1;
 			break;
@@ -65,7 +65,7 @@ void rf_task(u8 *step)
 			while(i--) buf[i] = 'A';
 			buf[sizeof(buf) - 1] = 0;
 			NRF24L01_TxPacket(buf);
-		printlog("NRF24L01 TX:%s", buf);
+			printlog("NRF24L01 TX:%s", buf);
 			break;
 	}		
 }

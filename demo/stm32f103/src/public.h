@@ -5,5 +5,6 @@
 
 #define OSC		(u32)72000000
 #define BIT(N)	(1<<(N))
+#define nop()	__nop()
 
 #endif /* __PUBLIC_H */

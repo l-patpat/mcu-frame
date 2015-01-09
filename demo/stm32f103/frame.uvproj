@@ -29,7 +29,7 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>$$Device:STM32F103ZE$SVD\STM32F103xx.svd</SFDFile>
+          <SFDFile></SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
@@ -442,6 +442,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\simple_server.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>FT5406.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\FT5406.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -471,6 +481,11 @@
               <FileName>NRF24L01.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Driver\NRF24L01.c</FilePath>
+            </File>
+            <File>
+              <FileName>24CXX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\24CXX.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -631,7 +646,7 @@
             <UsePdscDebugDescription>1</UsePdscDebugDescription>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>6</TargetSelection>
+          <TargetSelection>11</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -645,7 +660,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>Segger\JL2CM3.dll</Driver>
+            <Driver>STLink\ST-LINKIII-KEIL_SWO.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -655,10 +670,10 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4099</DriverSelection>
+            <DriverSelection>4103</DriverSelection>
           </Flash1>
           <bUseTDR>0</bUseTDR>
-          <Flash2>Segger\JL2CM3.dll</Flash2>
+          <Flash2>STLink\ST-LINKIII-KEIL_SWO.dll</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
@@ -831,7 +846,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>0</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>0</OneElfS>
@@ -927,6 +942,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\simple_server.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>FT5406.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\FT5406.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -956,6 +981,11 @@
               <FileName>NRF24L01.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Driver\NRF24L01.c</FilePath>
+            </File>
+            <File>
+              <FileName>24CXX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Driver\24CXX.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -8308,9 +8308,9 @@ typedef struct
   * @{
   */
 
-#define SET_IO(GPIO, BIT)		do { WRITE_REG(GPIO->BSRR, BIT); } while(0)
+#define SET_IO(GPIO, BIT)		WRITE_REG(GPIO->BSRR, BIT)
 
-#define CLEAR_IO(GPIO, BIT)		do { WRITE_REG(GPIO->BRR, BIT); } while(0)
+#define CLEAR_IO(GPIO, BIT)		WRITE_REG(GPIO->BRR, BIT)
 
 #define READ_IO(GPIO, BIT)		READ_BIT(GPIO->IDR, BIT)
 

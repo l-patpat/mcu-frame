@@ -6,6 +6,7 @@
 #include "STM32_Init.h"
 #include "SerialFlash.h"
 #include "NRF24L01.h"
+#include "24CXX.h"
 #include "simple_server.h"
 #include <stdlib.h>
 
@@ -21,17 +22,6 @@ void SysTick_Handler(void)
 void led_task(void *dummy)
 {
 	GPIOA->ODR ^= BIT(2);
-}
-
-void uart_task(u32 *number)
-{
-	printlog("uart_task number:%d\n", (*number)++);
-	
-	if(*number > 10)
-	{
-		printlog("Kill uart_task...\n");
-		task_del(&HighTasks, (void*)uart_task);
-	}
 }
 
 void flash_task(u8 *step)
@@ -96,6 +86,61 @@ void flash_task(u8 *step)
 	}
 }
 
+void eeprom_task(u8 *step)
+{
+	unsigned short i;
+	unsigned char buf[512];
+	
+	switch(*step)
+	{
+		case 0:
+			printlog("eeprom_task step0: 4Bytes program test\n");
+			for(i = 0; i < 4; i++)
+			{
+				buf[i] = 0xBB + i;
+			}
+			eeprom_write(0, buf, 4);
+			*step = 1;
+			break;
+		case 1:
+			printlog("eeprom_task step1: 4Bytes read test\n", sizeof(buf));
+			for(i = 0; i < 4; i++)
+			{
+				buf[i] = 0;
+			}
+			eeprom_read(0, buf, 4);
+			for(i = 0; i < 4; i++)
+			{
+				printlog("%02X ", buf[i]);
+			}
+			*step = 2;
+			break;
+		case 2:
+			printlog("\neeprom_task step2: Program at address 0x0000, size %d\n", sizeof(buf));
+			for(i = 0; i < sizeof(buf); i++)
+			{
+				buf[i] = i;
+			}
+			eeprom_write(0, buf, sizeof(buf));
+			*step = 3;
+			break;
+		case 3:
+			printlog("eeprom_task step3: Read at address 0x0000, size %d\n", sizeof(buf));
+			for(i = 0; i < sizeof(buf); i++)
+			{
+				buf[i] = 0;
+			}
+			eeprom_read(0, buf, sizeof(buf));
+			for(i = 0; i < sizeof(buf); i++)
+			{
+				printlog("%02X ", buf[i]);
+			}
+			printlog("\nKill eeprom_task...\n");
+			task_del(&HighTasks, eeprom_task);
+			break;
+	}
+}
+
 void rf_task(u8 *step)
 {
 	unsigned char buf[33];
@@ -135,8 +180,13 @@ int main(void)
 	task_list_init(&HighTasks);
 	task_list_init(&LowTasks);
 	
+	//Add led_task
 	task_add(&HighTasks, (void*)led_task, 0, TASK_SEC(0.5));
-	task_add(&HighTasks, (void*)uart_task, task_param_alloc(sizeof(u32)), TASK_SEC(0.5));
+	
+	//Add eeprom_task
+	param = task_param_alloc(sizeof(u32));
+	*(u8*)param = 0;
+	task_add(&HighTasks, (void*)eeprom_task, param, TASK_SEC(0.1));
 
 	if(NRF24L01_Check())
 	{
@@ -165,7 +215,7 @@ int main(void)
 
 	SysTick_Config(OSC / TASK_FREQ);
 	
-	simple_server();
+	//simple_server();
 	
 	while(1)
 	{

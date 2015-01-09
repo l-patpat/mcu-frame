@@ -103,6 +103,7 @@ unsigned char NRF24L01_TxPacket(unsigned char *txbuf)
 	while(0 != NRF24L01_IRQ());//等待发送完成
 	sta=NRF24L01_Read_Reg(STATUS);  //读取状态寄存器的值	   
 	NRF24L01_Write_Reg(CMD_WRITE_REG+STATUS,sta); //清除TX_DS或MAX_RT中断标志
+	//printlog("NRF24L01 STATUS:0x%02X\n", sta);
 	if(sta&MAX_TX)//达到最大重发次数
 	{
 		NRF24L01_Write_Reg(CMD_FLUSH_TX,0xff);//清除TX FIFO寄存器 
@@ -122,6 +123,7 @@ unsigned char NRF24L01_RxPacket(unsigned char *rxbuf)
 	unsigned char sta;		    							   
 	sta=NRF24L01_Read_Reg(STATUS);  //读取状态寄存器的值    	 
 	NRF24L01_Write_Reg(CMD_WRITE_REG+STATUS, sta); //清除TX_DS或MAX_RT中断标志
+	//printlog("NRF24L01 STATUS:0x%02X\n", sta);
 	if(sta & RX_OK)//接收到数据
 	{
 		NRF24L01_Read_Buf(CMD_RD_RX_PLOAD, rxbuf, RX_PLOAD_WIDTH);//读取数据
